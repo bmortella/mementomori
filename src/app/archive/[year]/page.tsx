@@ -29,6 +29,13 @@ export default function ArchiveYearPage({ params }: { params: Promise<{ year: st
     void load();
   }, [year, load]);
 
+  useEffect(() => {
+    if (data?.status === "unlocked" && (data.reflection.status === "running" || data.reflection.status === "none")) {
+      const t = setTimeout(() => void load(), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [data, load]);
+
   if (!data) return null;
   return (
     <main className="mx-auto max-w-xl px-6 py-16">

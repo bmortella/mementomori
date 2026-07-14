@@ -79,7 +79,9 @@ export default function Home() {
           Week {data.currentWeek} is sealed. Nothing to do here until next week.
         </p>
       )}
-      {data.status === "unlocked" && <ReadingPane data={data} onRetry={retry} showReveal />}
+      {data.status === "unlocked" && (
+        <ReadingPane data={data} onRetry={retry} showReveal onRevealDone={() => setRevealSeen(true)} />
+      )}
 
       <footer className="mt-20 flex items-center justify-between font-mono text-xs text-[var(--gray-3)]">
         <Link href="/archive" className="hover:text-[var(--fg)]">past years</Link>

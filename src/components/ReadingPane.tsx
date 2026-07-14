@@ -1,32 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { YearResponse } from "@/app/page";
 
 export default function ReadingPane({
   data,
   onRetry,
   showReveal,
+  onRevealDone,
 }: {
   data: YearResponse;
   onRetry: () => void;
   showReveal: boolean;
+  onRevealDone?: () => void;
 }) {
   const revealKey = `mm-revealed-${data.year}`;
-  const [revealed, setRevealed] = useState(true);
+  const sealedCount = data.cells.filter((c) => c.state === "sealed").length;
+  // Lazy init: no flash of revealed content before the gate applies, and no
+  // effect-driven state flip for the initial value.
+  const [revealed, setRevealed] = useState<boolean>(() => {
+    if (!showReveal) return true;
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem(revealKey) !== null;
+  });
+
+  const finishReveal = useCallback(() => {
+    localStorage.setItem(revealKey, "1");
+    setRevealed(true);
+    onRevealDone?.();
+  }, [revealKey, onRevealDone]);
 
   useEffect(() => {
-    if (showReveal && !localStorage.getItem(revealKey)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from localStorage, an external store
-      setRevealed(false);
-      const sealedCount = data.cells.filter((c) => c.state === "sealed").length;
-      const t = setTimeout(() => {
-        localStorage.setItem(revealKey, "1");
-        setRevealed(true);
-      }, sealedCount * 60 + 1200);
-      return () => clearTimeout(t);
-    }
-  }, [showReveal, revealKey, data.cells]);
+    if (revealed) return;
+    // sealedCount is a stable primitive across polls, so refetches don't
+    // restart the pacing timer; flipping `revealed` clears it via cleanup.
+    const t = setTimeout(finishReveal, sealedCount * 60 + 1200);
+    return () => clearTimeout(t);
+  }, [revealed, finishReveal, sealedCount]);
 
   if (!revealed) {
     return (
