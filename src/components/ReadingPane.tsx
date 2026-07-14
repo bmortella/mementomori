@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { YearResponse } from "@/app/page";
 
 export default function ReadingPane({
@@ -24,11 +24,18 @@ export default function ReadingPane({
     return localStorage.getItem(revealKey) !== null;
   });
 
+  // Keep the parent callback out of finishReveal's identity so an unmemoized
+  // prop can't restart the pacing timer on every poll re-render.
+  const onRevealDoneRef = useRef(onRevealDone);
+  useEffect(() => {
+    onRevealDoneRef.current = onRevealDone;
+  }, [onRevealDone]);
+
   const finishReveal = useCallback(() => {
     localStorage.setItem(revealKey, "1");
     setRevealed(true);
-    onRevealDone?.();
-  }, [revealKey, onRevealDone]);
+    onRevealDoneRef.current?.();
+  }, [revealKey]);
 
   useEffect(() => {
     if (revealed) return;

@@ -41,6 +41,8 @@ export default function Home() {
     void load();
   }, [data?.year, load]);
 
+  const handleRevealDone = useCallback(() => setRevealSeen(true), []);
+
   useEffect(() => {
     if (data?.reflection.status === "running" || (data?.status === "unlocked" && data.reflection.status === "none")) {
       const t = setTimeout(() => void load(), 4000);
@@ -80,7 +82,7 @@ export default function Home() {
         </p>
       )}
       {data.status === "unlocked" && (
-        <ReadingPane data={data} onRetry={retry} showReveal onRevealDone={() => setRevealSeen(true)} />
+        <ReadingPane data={data} onRetry={retry} showReveal onRevealDone={handleRevealDone} />
       )}
 
       <footer className="mt-20 flex items-center justify-between font-mono text-xs text-[var(--gray-3)]">
