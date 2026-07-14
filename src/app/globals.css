@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --fg: #0a0a0a;
+  --gray-1: #f3f3f3;
+  --gray-2: #d4d4d4;
+  --gray-3: #8a8a8a;
 }
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0a0a0a;
+    --fg: #fafafa;
+    --gray-1: #1c1c1c;
+    --gray-2: #3a3a3a;
+    --gray-3: #7a7a7a;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@keyframes mm-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mm-breathe {
+  0%, 100% { box-shadow: 0 0 0 1.5px var(--fg); }
+  50% { box-shadow: 0 0 0 1.5px var(--gray-3); }
+}
+@keyframes mm-fill {
+  from { background: var(--bg); }
+  to { background: var(--fg); }
+}
+.mm-enter { animation: mm-enter 0.3s ease-out both; }
+.mm-breathe { animation: mm-breathe 3s ease-in-out infinite; }
+.mm-fill { animation: mm-fill 0.9s ease-in both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-enter, .mm-breathe, .mm-fill { animation: none; }
+  .mm-breathe { box-shadow: 0 0 0 1.5px var(--fg); }
+  .mm-fill { background: var(--fg); }
 }
