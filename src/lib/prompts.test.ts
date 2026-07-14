@@ -39,3 +39,24 @@ describe("drawPrompt", () => {
     expect(pool.some((p) => p.id === drawn.id)).toBe(true);
   });
 });
+
+describe("loadPrompts resilience", () => {
+  it("falls back to defaults on malformed JSON without touching the file", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "mm-"));
+    const file = path.join(dir, "prompts.json");
+    writeFileSync(file, "{ not json");
+    expect(loadPrompts(dir).length).toBe(30);
+    expect(readFileSync(file, "utf8")).toBe("{ not json");
+  });
+  it("falls back to defaults on an empty array", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "mm-"));
+    writeFileSync(path.join(dir, "prompts.json"), "[]");
+    expect(loadPrompts(dir).length).toBe(30);
+  });
+});
+
+describe("drawPrompt empty pool", () => {
+  it("throws a clear error", () => {
+    expect(() => drawPrompt([], [])).toThrow("Prompt pool is empty");
+  });
+});
