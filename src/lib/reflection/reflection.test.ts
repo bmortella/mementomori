@@ -26,6 +26,11 @@ describe("buildReflectionPrompt", () => {
     expect(p).toContain("Jul 9 – Jul 15");
     expect(p).toContain("51"); // 51 missed weeks acknowledged
   });
+
+  it("quotes the configured anchor prompt", () => {
+    const p = buildReflectionPrompt(2026, [{ week: 1, dates: "Jan 1 – Jan 7", prompt: null, content: "x" }], "Custom anchor?");
+    expect(p).toContain('"Custom anchor?"');
+  });
 });
 
 describe("runReflection", () => {

@@ -50,10 +50,7 @@ export default function ReadingPane({
       <div className="mt-14 text-center">
         <p className="font-mono text-xs text-[var(--gray-3)]">{data.year} opens.</p>
         <button
-          onClick={() => {
-            localStorage.setItem(revealKey, "1");
-            setRevealed(true);
-          }}
+          onClick={finishReveal}
           className="mt-4 font-mono text-xs text-[var(--gray-3)] underline hover:text-[var(--fg)]"
         >
           skip

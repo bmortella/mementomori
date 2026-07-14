@@ -1,23 +1,27 @@
 import { WEEKS_PER_YEAR } from "@/lib/config";
 import type { Db } from "@/lib/db";
-import { getSetting } from "@/lib/settings";
+import { DEFAULT_ANCHOR_PROMPT, getSetting } from "@/lib/settings";
 import { AnthropicProvider } from "./anthropic";
 import { OllamaProvider } from "./ollama";
 
 export type ReflectionEntry = { week: number; dates: string; prompt: string | null; content: string };
 
 export interface ReflectionProvider {
-  generate(year: number, entries: ReflectionEntry[]): Promise<string>;
+  generate(year: number, entries: ReflectionEntry[], anchorPrompt?: string): Promise<string>;
 }
 
-export function buildReflectionPrompt(year: number, entries: ReflectionEntry[]): string {
+export function buildReflectionPrompt(
+  year: number,
+  entries: ReflectionEntry[],
+  anchorPrompt: string = DEFAULT_ANCHOR_PROMPT,
+): string {
   const missed = WEEKS_PER_YEAR - entries.length;
   const body = entries
     .map((e) => `Week ${e.week} (${e.dates})${e.prompt ? ` — drawn prompt: "${e.prompt}"` : ""}\n${e.content}`)
     .join("\n\n");
   return [
     `You are a thoughtful Stoic friend. You have been handed one year (${year}) of weekly reflections,`,
-    `each written in answer to: "This week is spent. What did you trade it for?" and sealed unread until today.`,
+    `each written in answer to: "${anchorPrompt}" and sealed unread until today.`,
     `${entries.length} of ${WEEKS_PER_YEAR} weeks were written; ${missed} weeks passed unrecorded — treat the gaps as part of the record.`,
     ``,
     `Write a reflection on the year for the author. Look for: recurring themes and preoccupations; contradictions`,

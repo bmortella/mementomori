@@ -3,7 +3,7 @@ import { buildReflectionPrompt, type ReflectionEntry, type ReflectionProvider } 
 export class AnthropicProvider implements ReflectionProvider {
   constructor(private apiKey: string, private model: string) {}
 
-  async generate(year: number, entries: ReflectionEntry[]): Promise<string> {
+  async generate(year: number, entries: ReflectionEntry[], anchorPrompt?: string): Promise<string> {
     if (!this.apiKey) throw new Error("Anthropic API key is not configured (settings or ANTHROPIC_API_KEY).");
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -15,7 +15,7 @@ export class AnthropicProvider implements ReflectionProvider {
       body: JSON.stringify({
         model: this.model,
         max_tokens: 2048,
-        messages: [{ role: "user", content: buildReflectionPrompt(year, entries) }],
+        messages: [{ role: "user", content: buildReflectionPrompt(year, entries, anchorPrompt) }],
       }),
       signal: AbortSignal.timeout(120_000), // bound the request; a stalled API must fail, not hang
     });

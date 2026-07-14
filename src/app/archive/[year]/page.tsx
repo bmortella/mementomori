@@ -40,7 +40,7 @@ export default function ArchiveYearPage({ params }: { params: Promise<{ year: st
   return (
     <main className="mx-auto max-w-xl px-6 py-16">
       <header className="mb-10 font-mono text-xs text-[var(--gray-3)]">{data.year}</header>
-      <YearGrid cells={data.cells} />
+      <YearGrid cells={data.cells} linkToEntries />
       <ReadingPane data={data} onRetry={retry} showReveal={false} />
       <footer className="mt-20 font-mono text-xs">
         <Link href="/archive" className="text-[var(--gray-3)] hover:text-[var(--fg)]">← past years</Link>

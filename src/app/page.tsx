@@ -65,9 +65,13 @@ export default function Home() {
         </span>
       </header>
 
-      <YearGrid cells={data.cells} revealing={data.status === "unlocked" && !revealSeen} />
+      <YearGrid
+        cells={data.cells}
+        revealing={data.status === "unlocked" && !revealSeen}
+        linkToEntries={data.status === "unlocked"}
+      />
 
-      {data.status === "active" && data.currentWeek !== null && !sealedThisWeek && (
+      {data.currentWeek !== null && !sealedThisWeek && (
         <WritingSurface
           anchorPrompt={data.anchorPrompt}
           week={data.currentWeek}

@@ -5,6 +5,7 @@ import { years } from "@/lib/db/schema";
 import { readEntries } from "@/lib/entries";
 import { loadPrompts } from "@/lib/prompts";
 import { formatWeekDates } from "@/lib/weeks";
+import { DEFAULT_ANCHOR_PROMPT, getSetting } from "@/lib/settings";
 import { getProvider, type ReflectionEntry, type ReflectionProvider } from "./provider";
 
 // DB status is for display; this in-process set is the concurrency guard, so a
@@ -29,7 +30,8 @@ export async function runReflection(ctx: Ctx, year: number, provider?: Reflectio
       prompt: e.promptId ? (pool.get(e.promptId) ?? null) : null,
       content: e.content,
     }));
-    const text = await (provider ?? getProvider(ctx.db)).generate(year, entries);
+    const anchorPrompt = getSetting(ctx.db, "anchor_prompt") ?? DEFAULT_ANCHOR_PROMPT;
+    const text = await (provider ?? getProvider(ctx.db)).generate(year, entries, anchorPrompt);
     ctx.db.update(years).set({ reflectionStatus: "done", reflectionText: text }).where(eq(years.year, year)).run();
   } catch (e) {
     ctx.db

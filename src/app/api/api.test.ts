@@ -66,6 +66,14 @@ describe("prompts + settings + archive", () => {
     const archive = await import("@/app/api/archive/route");
     expect((await (await archive.GET()).json()).years).toEqual([]);
   });
+  it("sweeps past-due active years into the archive", async () => {
+    const { getCtx } = await import("@/lib/context");
+    const { years } = await import("@/lib/db/schema");
+    getCtx().db.insert(years).values({ year: 2020, unlockDate: "2020-12-31" }).run();
+    const archive = await import("@/app/api/archive/route");
+    const { years: list } = await (await archive.GET()).json();
+    expect(list).toEqual([{ year: 2020, entryCount: 0 }]);
+  });
 });
 
 describe("request validation", () => {
@@ -82,5 +90,14 @@ describe("request validation", () => {
     const seal = await import("@/app/api/seal/route");
     expect((await post(seal, { content: "no week" })).status).toBe(400);
     expect((await post(seal, { week: "seven", content: "x" })).status).toBe(400);
+  });
+  it("rejects malformed unlockDay and unknown providerType", async () => {
+    const s = await import("@/app/api/settings/route");
+    const put = (body: unknown) =>
+      s.PUT(new Request("http://x/", { method: "PUT", body: JSON.stringify(body) }));
+    expect((await put({ unlockDay: "31-12" })).status).toBe(400);
+    expect((await put({ unlockDay: "13-45" })).status).toBe(400);
+    expect((await put({ providerType: "gemini" })).status).toBe(400);
+    expect((await put({ unlockDay: "11-30", providerType: "ollama" })).status).toBe(204);
   });
 });
