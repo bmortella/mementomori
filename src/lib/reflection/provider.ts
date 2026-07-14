@@ -1,0 +1,47 @@
+import { WEEKS_PER_YEAR } from "@/lib/config";
+import type { Db } from "@/lib/db";
+import { getSetting } from "@/lib/settings";
+import { AnthropicProvider } from "./anthropic";
+import { OllamaProvider } from "./ollama";
+
+export type ReflectionEntry = { week: number; dates: string; prompt: string | null; content: string };
+
+export interface ReflectionProvider {
+  generate(year: number, entries: ReflectionEntry[]): Promise<string>;
+}
+
+export function buildReflectionPrompt(year: number, entries: ReflectionEntry[]): string {
+  const missed = WEEKS_PER_YEAR - entries.length;
+  const body = entries
+    .map((e) => `Week ${e.week} (${e.dates})${e.prompt ? ` — drawn prompt: "${e.prompt}"` : ""}\n${e.content}`)
+    .join("\n\n");
+  return [
+    `You are a thoughtful Stoic friend. You have been handed one year (${year}) of weekly reflections,`,
+    `each written in answer to: "This week is spent. What did you trade it for?" and sealed unread until today.`,
+    `${entries.length} of ${WEEKS_PER_YEAR} weeks were written; ${missed} weeks passed unrecorded — treat the gaps as part of the record.`,
+    ``,
+    `Write a reflection on the year for the author. Look for: recurring themes and preoccupations; contradictions`,
+    `between what they valued and where their weeks went; how they changed from the first entries to the last;`,
+    `and what the gaps might mean. Quote short phrases from the entries where it sharpens the point.`,
+    `Be direct and warm, never flattering. Do not summarize week by week. End with one question worth carrying`,
+    `into the new year. Aim for 400-600 words of plain prose.`,
+    ``,
+    `The entries:`,
+    ``,
+    body,
+  ].join("\n");
+}
+
+export function getProvider(db: Db): ReflectionProvider {
+  const type = getSetting(db, "provider_type") ?? "anthropic";
+  if (type === "ollama") {
+    return new OllamaProvider(
+      getSetting(db, "ollama_host") ?? "http://localhost:11434",
+      getSetting(db, "provider_model") ?? "llama3.1",
+    );
+  }
+  return new AnthropicProvider(
+    process.env.ANTHROPIC_API_KEY ?? getSetting(db, "anthropic_api_key") ?? "",
+    getSetting(db, "provider_model") ?? "claude-sonnet-5",
+  );
+}
