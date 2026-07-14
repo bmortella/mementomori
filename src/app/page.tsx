@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import YearGrid from "@/components/YearGrid";
 import WritingSurface from "@/components/WritingSurface";
+import ReadingPane from "@/components/ReadingPane";
 import type { YearState } from "@/lib/years";
 import type { EntryMeta } from "@/lib/entries";
 
@@ -14,6 +15,7 @@ export type YearResponse = YearState & {
 
 export default function Home() {
   const [data, setData] = useState<YearResponse | null>(null);
+  const [revealSeen, setRevealSeen] = useState(true);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/year");
@@ -24,6 +26,27 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch on mount
     void load();
   }, [load]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from localStorage, an external store
+    if (data?.status === "unlocked") setRevealSeen(Boolean(localStorage.getItem(`mm-revealed-${data.year}`)));
+  }, [data?.status, data?.year]);
+
+  const retry = useCallback(async () => {
+    await fetch("/api/reflection/retry", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ year: data?.year }),
+    });
+    void load();
+  }, [data?.year, load]);
+
+  useEffect(() => {
+    if (data?.reflection.status === "running" || (data?.status === "unlocked" && data.reflection.status === "none")) {
+      const t = setTimeout(() => void load(), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [data, load]);
 
   if (!data) return null;
 
@@ -40,7 +63,7 @@ export default function Home() {
         </span>
       </header>
 
-      <YearGrid cells={data.cells} />
+      <YearGrid cells={data.cells} revealing={data.status === "unlocked" && !revealSeen} />
 
       {data.status === "active" && data.currentWeek !== null && !sealedThisWeek && (
         <WritingSurface
@@ -56,6 +79,7 @@ export default function Home() {
           Week {data.currentWeek} is sealed. Nothing to do here until next week.
         </p>
       )}
+      {data.status === "unlocked" && <ReadingPane data={data} onRetry={retry} showReveal />}
 
       <footer className="mt-20 flex items-center justify-between font-mono text-xs text-[var(--gray-3)]">
         <Link href="/archive" className="hover:text-[var(--fg)]">past years</Link>
