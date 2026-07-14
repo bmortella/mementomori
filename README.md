@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# mementomori
 
-## Getting Started
+A private, self-hosted ritual for keeping a 52-week journal. Each week of the year is one cell in a grid; you write once, seal it, and the entry is encrypted at rest and locked from view until December 31st. Weeks you miss simply stay empty — there's no backfilling, no editing after sealing, no pressure to catch up. On unlock day the year opens up for reading, and you can generate a single AI reflection over everything you sealed, looking back at the shape of the year as a whole.
 
-First, run the development server:
+## Quick start
+
+Build and run with Docker:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker build -t mementomori .
+docker run -d -p 3000:3000 -v mm-data:/app/data -e TZ=America/Sao_Paulo mementomori
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000). All state (the database, the encryption key, and your prompt pool) lives in the `mm-data` volume, so the container itself is disposable.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+For local development instead:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Required | Description |
+| --- | --- | --- |
+| `TZ` | recommended | Timezone the ritual runs on — determines week boundaries and when the year unlocks (e.g. `America/Sao_Paulo`). Defaults to the container/host timezone if unset. |
+| `DATA_DIR` | no | Where the database, key, and prompt pool are stored. Defaults to `./data`; in the Docker image this is `/app/data`, matching the `VOLUME`. |
+| `MASTER_KEY` | no | 64 hex characters (32 bytes) used as the AES-256-GCM encryption key. If omitted, a key is generated on first run and stored as `master.key` in `DATA_DIR`. |
+| `APP_PASSWORD` | no | If set, gates every route behind a login page (`/login`) until the correct password is submitted, via a signed cookie. If unset, the app is open — no gate. |
+| `ANTHROPIC_API_KEY` | no | Overrides the Anthropic API key stored via `/settings` for the AI reflection feature. Useful for injecting a key at deploy time instead of pasting it into the UI. |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Backups
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Back up the entire data volume as a unit, not individual files. Two files in particular must travel together:
 
-## Deploy on Vercel
+- `mementomori.db` — the SQLite database holding your sealed (encrypted) entries and settings.
+- `master.key` — the encryption key (only present if you didn't set `MASTER_KEY` yourself).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Ciphertext without the key that encrypted it is unrecoverable by design — there is no recovery path, no backdoor, and no way to decrypt entries if `master.key` is lost or overwritten. If you set `MASTER_KEY` as an environment variable instead of letting the app generate a keyfile, make sure that value is backed up somewhere just as durable as the volume itself.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`prompts.json`, also in the data volume, holds the pool of writing prompts drawn from each week. It's a plain JSON file and safe to edit by hand between backups.
+
+## Customizing
+
+Most day-to-day settings live in the app itself, at `/settings`:
+
+- **Anchor prompt** — the fixed prompt shown every week (as opposed to the rotating pool).
+- **Unlock day** — the `MM-DD` on which the current year's entries become readable (defaults to December 31st; applies to newly started years).
+- **Reflection provider** — the AI provider and model used to generate the end-of-year reflection, plus the API key (unless overridden by `ANTHROPIC_API_KEY`).
+
+For deeper customization, edit `prompts.json` directly in the data volume to change the pool of prompts weeks are drawn from.
