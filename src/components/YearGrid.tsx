@@ -5,7 +5,7 @@ import type { Cell } from "@/lib/years";
 const CELL_STYLE: Record<Cell["state"], string> = {
   sealed: "bg-[var(--fg)]",
   current: "bg-[var(--bg)] mm-breathe",
-  missed: "border border-[var(--gray-2)] mm-strike",
+  missed: "border border-[var(--gray-2)]",
   future: "border border-[var(--gray-1)]",
 };
 

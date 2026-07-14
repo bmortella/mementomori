@@ -78,6 +78,7 @@ export default function WritingSurface({
       <h1 className="text-2xl font-medium tracking-tight">{anchorPrompt}</h1>
       {drawn && <p className="mt-3 text-sm text-[var(--gray-3)] mm-enter">{drawn.text}</p>}
       <textarea
+        disabled={confirming}
         value={content}
         onChange={(e) => setContent(e.target.value.replace(/[\r\n]/g, " "))}
         rows={4}
