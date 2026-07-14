@@ -31,7 +31,7 @@ export async function runReflection(ctx: Ctx, year: number, provider?: Reflectio
       content: e.content,
     }));
     const anchorPrompt = getSetting(ctx.db, "anchor_prompt") ?? DEFAULT_ANCHOR_PROMPT;
-    const text = await (provider ?? getProvider(ctx.db)).generate(year, entries, anchorPrompt);
+    const text = await (provider ?? getProvider(ctx.db, ctx.key)).generate(year, entries, anchorPrompt);
     ctx.db.update(years).set({ reflectionStatus: "done", reflectionText: text }).where(eq(years.year, year)).run();
   } catch (e) {
     ctx.db

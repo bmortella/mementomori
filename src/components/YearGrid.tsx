@@ -13,21 +13,26 @@ export default function YearGrid({
   cells,
   revealing = false,
   linkToEntries = false,
+  justSealedWeek = null,
 }: {
   cells: Cell[];
   revealing?: boolean;
   linkToEntries?: boolean;
+  justSealedWeek?: number | null;
 }) {
   return (
     <div className="grid grid-cols-13 gap-[6px]" role="img" aria-label="52 weeks of the year">
       {cells.map((cell, i) => {
+        const justSealed = cell.week === justSealedWeek && cell.state === "sealed";
         const square = (
           <div
-            className={`aspect-square w-full rounded-[3px] mm-enter ${revealing && cell.state === "sealed" ? "mm-fill" : ""} ${CELL_STYLE[cell.state]}`}
+            className={`aspect-square w-full rounded-[3px] mm-enter ${revealing && cell.state === "sealed" ? "mm-fill" : ""} ${justSealed ? "mm-seal-pop" : ""} ${CELL_STYLE[cell.state]}`}
             style={{
-              animationDelay: revealing
-                ? `${cell.state === "sealed" ? i * 60 : 0}ms`
-                : `${i * 12}ms`,
+              animationDelay: justSealed
+                ? "0ms"
+                : revealing
+                  ? `${cell.state === "sealed" ? i * 60 : 0}ms`
+                  : `${i * 12}ms`,
               ...(cell.state === "missed"
                 ? { backgroundImage: "linear-gradient(135deg, transparent 46%, var(--gray-2) 46%, var(--gray-2) 54%, transparent 54%)" }
                 : {}),

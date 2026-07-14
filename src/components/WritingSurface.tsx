@@ -10,12 +10,14 @@ export default function WritingSurface({
   week,
   year,
   unlockDate,
+  confirmSeal,
   onSealed,
 }: {
   anchorPrompt: string;
   week: number;
   year: number;
   unlockDate: string;
+  confirmSeal: boolean;
   onSealed: () => void;
 }) {
   const draftKey = `mm-draft-${year}-${week}`;
@@ -24,6 +26,7 @@ export default function WritingSurface({
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sealing, setSealing] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(draftKey);
@@ -55,14 +58,18 @@ export default function WritingSurface({
     setBusy(false);
     if (res.ok) {
       localStorage.removeItem(draftKey);
-      onSealed();
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setSealing(true);
+      setTimeout(onSealed, reduced ? 0 : 650);
     } else {
       const { error: code } = await res.json();
       setError(
         code === "ALREADY_SEALED" ? "This week is already sealed."
         : code === "WRONG_WEEK" ? "This week has passed. The cell stays empty."
         : code === "TOO_LONG" ? `Too long — ${MAX_ENTRY_CHARS} characters at most.`
-        : "One paragraph only.",
+        : code === "MULTI_PARAGRAPH" ? "One paragraph only."
+        : code === "EMPTY" ? "Write something first."
+        : "Couldn't seal. Try again.",
       );
       setConfirming(false);
     }
@@ -72,15 +79,28 @@ export default function WritingSurface({
     month: "long", day: "numeric", year: "numeric",
   });
   const over = content.length > MAX_ENTRY_CHARS;
+  const canSeal = Boolean(content.trim()) && !over && !busy && !sealing;
+
+  function requestSeal() {
+    if (!canSeal) return;
+    if (confirmSeal) setConfirming(true);
+    else void seal();
+  }
 
   return (
-    <section className="mt-14">
+    <section className={`mt-14 ${sealing ? "mm-seal-out" : ""}`}>
       <h1 className="text-2xl font-medium tracking-tight">{anchorPrompt}</h1>
       {drawn && <p className="mt-3 text-sm text-[var(--gray-3)] mm-enter">{drawn.text}</p>}
       <textarea
-        disabled={confirming}
+        disabled={confirming || sealing}
         value={content}
         onChange={(e) => setContent(e.target.value.replace(/[\r\n]/g, " "))}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            requestSeal();
+          }
+        }}
         rows={4}
         placeholder="One paragraph. Then it's sealed."
         className="mt-6 w-full resize-none border-b border-[var(--gray-2)] bg-transparent pb-2 text-base leading-relaxed outline-none placeholder:text-[var(--gray-3)] focus:border-[var(--fg)]"
@@ -99,8 +119,8 @@ export default function WritingSurface({
       <div className="mt-8">
         {!confirming ? (
           <button
-            onClick={() => setConfirming(true)}
-            disabled={!content.trim() || over}
+            onClick={requestSeal}
+            disabled={!canSeal}
             className="bg-[var(--fg)] px-6 py-2.5 text-sm font-medium text-[var(--bg)] transition-transform active:scale-95 disabled:opacity-30"
           >
             Seal
@@ -108,7 +128,7 @@ export default function WritingSurface({
         ) : (
           <div className="mm-enter flex items-center gap-4">
             <p className="text-sm">Sealed is sealed. No reading, no editing, until {unlockLabel}.</p>
-            <button onClick={seal} disabled={busy}
+            <button onClick={() => void seal()} disabled={busy} autoFocus
               className="bg-[var(--fg)] px-4 py-2 text-sm text-[var(--bg)] active:scale-95 disabled:opacity-50">
               Seal it
             </button>

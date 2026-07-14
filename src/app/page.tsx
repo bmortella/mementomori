@@ -10,12 +10,14 @@ import type { EntryMeta } from "@/lib/entries";
 
 export type YearResponse = YearState & {
   anchorPrompt: string;
+  confirmSeal: boolean;
   entries: Array<EntryMeta & { content: string }> | null;
 };
 
 export default function Home() {
   const [data, setData] = useState<YearResponse | null>(null);
   const [revealSeen, setRevealSeen] = useState(true);
+  const [justSealedWeek, setJustSealedWeek] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/year");
@@ -43,6 +45,11 @@ export default function Home() {
 
   const handleRevealDone = useCallback(() => setRevealSeen(true), []);
 
+  const handleSealed = useCallback(() => {
+    setJustSealedWeek(data?.currentWeek ?? null);
+    void load();
+  }, [data?.currentWeek, load]);
+
   useEffect(() => {
     if (data?.reflection.status === "running" || (data?.status === "unlocked" && data.reflection.status === "none")) {
       const t = setTimeout(() => void load(), 4000);
@@ -69,6 +76,7 @@ export default function Home() {
         cells={data.cells}
         revealing={data.status === "unlocked" && !revealSeen}
         linkToEntries={data.status === "unlocked"}
+        justSealedWeek={justSealedWeek}
       />
 
       {data.currentWeek !== null && !sealedThisWeek && (
@@ -77,7 +85,8 @@ export default function Home() {
           week={data.currentWeek}
           year={data.year}
           unlockDate={data.unlockDate}
-          onSealed={load}
+          confirmSeal={data.confirmSeal}
+          onSealed={handleSealed}
         />
       )}
       {data.status === "active" && sealedThisWeek && (
@@ -91,7 +100,7 @@ export default function Home() {
 
       <footer className="mt-20 flex items-center justify-between font-mono text-xs text-[var(--gray-3)]">
         <Link href="/archive" className="hover:text-[var(--fg)]">past years</Link>
-        <Link href="/settings" className="hover:text-[var(--fg)]">⚙</Link>
+        <Link href="/settings" className="hover:text-[var(--fg)]">settings</Link>
       </footer>
     </main>
   );

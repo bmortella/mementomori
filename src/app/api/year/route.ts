@@ -27,6 +27,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     ...state,
     anchorPrompt: getSetting(ctx.db, "anchor_prompt") ?? DEFAULT_ANCHOR_PROMPT,
+    confirmSeal: (getSetting(ctx.db, "confirm_seal") ?? "0") === "1",
     entries: state.status === "unlocked" ? readEntries(ctx, year) : null,
   });
 }

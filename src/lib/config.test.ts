@@ -17,7 +17,7 @@ describe("config", () => {
 
   it("exports caps", async () => {
     const { MAX_ENTRY_CHARS, WEEKS_PER_YEAR } = await import("@/lib/config");
-    expect(MAX_ENTRY_CHARS).toBe(750);
+    expect(MAX_ENTRY_CHARS).toBe(500);
     expect(WEEKS_PER_YEAR).toBe(52);
   });
 });

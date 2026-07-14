@@ -47,7 +47,7 @@ describe("seal + year", () => {
 describe("prompts + settings + archive", () => {
   it("draws a prompt from the pool", async () => {
     const draw = await import("@/app/api/prompts/draw/route");
-    const p = await (await draw.POST(new Request("http://x/", { method: "POST" }))).json();
+    const p = await (await draw.POST()).json();
     expect(typeof p.id).toBe("string");
     expect(p.text.length).toBeGreaterThan(10);
   });
@@ -61,6 +61,40 @@ describe("prompts + settings + archive", () => {
     expect(got.anchorPrompt).toBe("Custom?");
     expect(got.anthropicKeySet).toBe(true);
     expect(JSON.stringify(got)).not.toContain("sk-test");
+  });
+  it("stores the API key encrypted at rest but readable via getSecretSetting", async () => {
+    const s = await import("@/app/api/settings/route");
+    await s.PUT(new Request("http://x/", { method: "PUT", body: JSON.stringify({ anthropicApiKey: "sk-secret" }) }));
+    const { getCtx } = await import("@/lib/context");
+    const { getSetting, getSecretSetting } = await import("@/lib/settings");
+    const ctx = getCtx();
+    expect(getSetting(ctx.db, "anthropic_api_key")).not.toContain("sk-secret");
+    expect(getSecretSetting(ctx.db, ctx.key, "anthropic_api_key")).toBe("sk-secret");
+  });
+  it("returns a pre-encryption plaintext key as-is", async () => {
+    const { getCtx } = await import("@/lib/context");
+    const { setSetting, getSecretSetting } = await import("@/lib/settings");
+    const ctx = getCtx();
+    setSetting(ctx.db, "anthropic_api_key", "sk-legacy");
+    expect(getSecretSetting(ctx.db, ctx.key, "anthropic_api_key")).toBe("sk-legacy");
+  });
+  it("applies a new unlock day to the current active year", async () => {
+    const yearRoute = await import("@/app/api/year/route");
+    const s = await import("@/app/api/settings/route");
+    const before = await (await yearRoute.GET(new Request("http://x/api/year"))).json();
+    expect(before.status).toBe("active");
+    const today = `${String(NOW.getMonth() + 1).padStart(2, "0")}-${String(NOW.getDate()).padStart(2, "0")}`;
+    await s.PUT(new Request("http://x/", { method: "PUT", body: JSON.stringify({ unlockDay: today }) }));
+    const after = await (await yearRoute.GET(new Request("http://x/api/year"))).json();
+    expect(after.status).toBe("unlocked");
+  });
+  it("round-trips confirmSeal through settings and the year payload", async () => {
+    const s = await import("@/app/api/settings/route");
+    const yearRoute = await import("@/app/api/year/route");
+    expect((await (await yearRoute.GET(new Request("http://x/api/year"))).json()).confirmSeal).toBe(false);
+    await s.PUT(new Request("http://x/", { method: "PUT", body: JSON.stringify({ confirmSeal: "1" }) }));
+    expect((await (await s.GET()).json()).confirmSeal).toBe(true);
+    expect((await (await yearRoute.GET(new Request("http://x/api/year"))).json()).confirmSeal).toBe(true);
   });
   it("archive lists only unlocked years", async () => {
     const archive = await import("@/app/api/archive/route");
@@ -97,7 +131,11 @@ describe("request validation", () => {
       s.PUT(new Request("http://x/", { method: "PUT", body: JSON.stringify(body) }));
     expect((await put({ unlockDay: "31-12" })).status).toBe(400);
     expect((await put({ unlockDay: "13-45" })).status).toBe(400);
+    expect((await put({ unlockDay: "02-31" })).status).toBe(400); // impossible date, would normalize to Mar 3
+    expect((await put({ unlockDay: "04-31" })).status).toBe(400);
+    expect((await put({ unlockDay: "02-29" })).status).toBe(204); // real day in leap years
     expect((await put({ providerType: "gemini" })).status).toBe(400);
+    expect((await put({ confirmSeal: "yes" })).status).toBe(400);
     expect((await put({ unlockDay: "11-30", providerType: "ollama" })).status).toBe(204);
   });
 });

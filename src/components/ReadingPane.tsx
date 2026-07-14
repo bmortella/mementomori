@@ -77,7 +77,7 @@ export default function ReadingPane({
       <div className="border-t border-[var(--gray-2)] pt-10">
         <h2 className="font-mono text-xs text-[var(--gray-3)]">the year, read back</h2>
         {r.status === "done" && r.text && (
-          <p className="mt-3 whitespace-pre-line leading-relaxed">{r.text}</p>
+          <p className="mm-reflect mt-3 whitespace-pre-line leading-relaxed">{r.text}</p>
         )}
         {r.status === "done" && !r.text && (
           <p className="mt-3 text-sm text-[var(--gray-3)]">No entries were sealed this year.</p>

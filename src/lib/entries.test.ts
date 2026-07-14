@@ -40,8 +40,8 @@ describe("sealEntry", () => {
   it("enforces the content rules", () => {
     expect(code(() => sealEntry(ctx(), { ...ok, content: "  " }))).toBe("EMPTY");
     expect(code(() => sealEntry(ctx(), { ...ok, content: "one\ntwo" }))).toBe("MULTI_PARAGRAPH");
-    expect(code(() => sealEntry(ctx(), { ...ok, content: "x".repeat(751) }))).toBe("TOO_LONG");
-    expect(() => sealEntry(ctx(), { ...ok, content: "x".repeat(750) })).not.toThrow();
+    expect(code(() => sealEntry(ctx(), { ...ok, content: "x".repeat(501) }))).toBe("TOO_LONG");
+    expect(() => sealEntry(ctx(), { ...ok, content: "x".repeat(500) })).not.toThrow();
   });
   it("still accepts the current week after unlock", () => {
     const c = ctx();

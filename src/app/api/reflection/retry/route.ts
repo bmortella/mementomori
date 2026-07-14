@@ -16,9 +16,9 @@ export async function POST(req: Request) {
   if (!row || row.status !== "unlocked") {
     return NextResponse.json({ error: "YEAR_LOCKED" }, { status: 409 });
   }
-  if (row.reflectionStatus !== "running") {
-    ctx.db.update(years).set({ reflectionStatus: "none" }).where(eq(years.year, year)).run();
-    void runReflection(ctx, year);
-  }
+  // No status gate: `runReflection`'s in-process inFlight set is the real
+  // concurrency guard, so a crash-stranded "running" row stays retryable.
+  ctx.db.update(years).set({ reflectionStatus: "none" }).where(eq(years.year, year)).run();
+  void runReflection(ctx, year);
   return NextResponse.json({ status: "running" });
 }

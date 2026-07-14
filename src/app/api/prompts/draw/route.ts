@@ -4,7 +4,7 @@ import { getCtx } from "@/lib/context";
 import { listEntryMeta } from "@/lib/entries";
 import { drawPrompt, loadPrompts } from "@/lib/prompts";
 
-export async function POST(_req: Request) {
+export async function POST() {
   const ctx = getCtx();
   const year = new Date().getFullYear();
   const usedIds = listEntryMeta(ctx.db, year)

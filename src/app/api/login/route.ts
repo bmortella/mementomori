@@ -14,6 +14,10 @@ export async function POST(req: Request) {
   res.cookies.set("mm_auth", await authToken(expected), {
     httpOnly: true,
     sameSite: "lax",
+    // Conditional so plain-HTTP LAN deployments keep working.
+    secure:
+      new URL(req.url).protocol === "https:" ||
+      req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() === "https",
     maxAge: 60 * 60 * 24 * 365,
     path: "/",
   });

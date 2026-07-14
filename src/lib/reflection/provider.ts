@@ -1,6 +1,6 @@
 import { WEEKS_PER_YEAR } from "@/lib/config";
 import type { Db } from "@/lib/db";
-import { DEFAULT_ANCHOR_PROMPT, getSetting } from "@/lib/settings";
+import { DEFAULT_ANCHOR_PROMPT, getSecretSetting, getSetting } from "@/lib/settings";
 import { AnthropicProvider } from "./anthropic";
 import { OllamaProvider } from "./ollama";
 
@@ -27,6 +27,8 @@ export function buildReflectionPrompt(
     `Write a reflection on the year for the author. Look for: recurring themes and preoccupations; contradictions`,
     `between what they valued and where their weeks went; how they changed from the first entries to the last;`,
     `and what the gaps might mean. Quote short phrases from the entries where it sharpens the point.`,
+    `Work only from the entries below: never invent events, people, or details that are not written there,`,
+    `and only mention weeks that actually appear. If something is ambiguous, let it stay ambiguous.`,
     `Be direct and warm, never flattering. Do not summarize week by week. End with one question worth carrying`,
     `into the new year. Aim for 400-600 words of plain prose.`,
     ``,
@@ -36,7 +38,7 @@ export function buildReflectionPrompt(
   ].join("\n");
 }
 
-export function getProvider(db: Db): ReflectionProvider {
+export function getProvider(db: Db, masterKey: Buffer): ReflectionProvider {
   const type = getSetting(db, "provider_type") ?? "anthropic";
   if (type === "ollama") {
     return new OllamaProvider(
@@ -45,7 +47,7 @@ export function getProvider(db: Db): ReflectionProvider {
     );
   }
   return new AnthropicProvider(
-    process.env.ANTHROPIC_API_KEY ?? getSetting(db, "anthropic_api_key") ?? "",
+    process.env.ANTHROPIC_API_KEY ?? getSecretSetting(db, masterKey, "anthropic_api_key") ?? "",
     getSetting(db, "provider_model") ?? "claude-sonnet-5",
   );
 }

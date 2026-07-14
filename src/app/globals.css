@@ -40,12 +40,23 @@ body {
   from { background: var(--bg); }
   to { background: var(--fg); }
 }
+@keyframes mm-seal-out {
+  to { opacity: 0; transform: translateY(-10px); filter: blur(3px); }
+}
+@keyframes mm-seal-pop {
+  0% { background: var(--bg); transform: scale(1); }
+  60% { background: var(--fg); transform: scale(1.45); }
+  100% { background: var(--fg); transform: scale(1); }
+}
 .mm-enter { animation: mm-enter 0.3s ease-out both; }
 .mm-breathe { animation: mm-breathe 3s ease-in-out infinite; }
 .mm-fill { animation: mm-fill 0.9s ease-in both; }
+.mm-seal-out { animation: mm-seal-out 0.6s ease-in both; pointer-events: none; }
+.mm-seal-pop { animation: mm-seal-pop 0.5s ease-out both; }
+.mm-reflect { animation: mm-enter 1.2s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .mm-enter, .mm-breathe, .mm-fill { animation: none; }
+  .mm-enter, .mm-breathe, .mm-fill, .mm-seal-out, .mm-seal-pop, .mm-reflect { animation: none; }
   .mm-breathe { box-shadow: 0 0 0 1.5px var(--fg); }
-  .mm-fill { background: var(--fg); }
+  .mm-fill, .mm-seal-pop { background: var(--fg); }
 }

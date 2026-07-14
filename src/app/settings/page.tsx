@@ -6,6 +6,7 @@ import Link from "next/link";
 type Settings = {
   anchorPrompt: string;
   unlockDay: string;
+  confirmSeal: boolean;
   providerType: string;
   providerModel: string;
   ollamaHost: string;
@@ -32,6 +33,7 @@ export default function SettingsPage() {
       body: JSON.stringify({
         anchorPrompt: s.anchorPrompt,
         unlockDay: s.unlockDay,
+        confirmSeal: s.confirmSeal ? "1" : "0",
         providerType: s.providerType,
         providerModel: s.providerModel,
         ollamaHost: s.ollamaHost,
@@ -52,8 +54,17 @@ export default function SettingsPage() {
           <input className={FIELD} value={s.anchorPrompt} onChange={(e) => setS({ ...s, anchorPrompt: e.target.value })} />
         </label>
         <label className="block">
-          <span className={LABEL}>unlock day (MM-DD, applies to new years)</span>
+          <span className={LABEL}>unlock day (MM-DD)</span>
           <input className={FIELD} value={s.unlockDay} onChange={(e) => setS({ ...s, unlockDay: e.target.value })} />
+        </label>
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={s.confirmSeal}
+            onChange={(e) => setS({ ...s, confirmSeal: e.target.checked })}
+            className="h-4 w-4 accent-[var(--fg)]"
+          />
+          <span className={LABEL}>ask for confirmation before sealing</span>
         </label>
         <label className="block">
           <span className={LABEL}>reflection provider</span>
