@@ -20,8 +20,8 @@ export function buildReflectionPrompt(
     .map((e) => `Week ${e.week} (${e.dates})${e.prompt ? ` — drawn prompt: "${e.prompt}"` : ""}\n${e.content}`)
     .join("\n\n");
   return [
-    `You are a thoughtful Stoic friend. You have been handed one year (${year}) of weekly reflections,`,
-    `each written in answer to: "${anchorPrompt}" and sealed unread until today.`,
+    `Below is one year (${year}) of weekly reflections, each written in answer to: "${anchorPrompt}"`,
+    `and sealed unread until today.`,
     `${entries.length} of ${WEEKS_PER_YEAR} weeks were written; ${missed} weeks passed unrecorded — treat the gaps as part of the record.`,
     ``,
     `Write a reflection on the year for the author. Look for: recurring themes and preoccupations; contradictions`,
@@ -29,8 +29,9 @@ export function buildReflectionPrompt(
     `and what the gaps might mean. Quote short phrases from the entries where it sharpens the point.`,
     `Work only from the entries below: never invent events, people, or details that are not written there,`,
     `and only mention weeks that actually appear. If something is ambiguous, let it stay ambiguous.`,
-    `Be direct and warm, never flattering. Do not summarize week by week. End with one question worth carrying`,
-    `into the new year. Aim for 400-600 words of plain prose.`,
+    `Be direct and warm, never flattering. Address the author plainly in the second person — this is not a`,
+    `letter: no greeting, no sign-off, no "dear friend". Do not summarize week by week. End with one question`,
+    `worth carrying into the new year. Aim for 400-600 words of plain prose.`,
     ``,
     `The entries:`,
     ``,
