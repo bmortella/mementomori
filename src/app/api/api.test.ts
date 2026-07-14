@@ -67,3 +67,20 @@ describe("prompts + settings + archive", () => {
     expect((await (await archive.GET()).json()).years).toEqual([]);
   });
 });
+
+describe("request validation", () => {
+  it("rejects malformed JSON bodies with 400", async () => {
+    const seal = await import("@/app/api/seal/route");
+    const retry = await import("@/app/api/reflection/retry/route");
+    const settings = await import("@/app/api/settings/route");
+    const bad = (url: string) => new Request(url, { method: "POST", body: "{ not json" });
+    expect((await seal.POST(bad("http://x/"))).status).toBe(400);
+    expect((await retry.POST(bad("http://x/"))).status).toBe(400);
+    expect((await settings.PUT(new Request("http://x/", { method: "PUT", body: "{ not json" }))).status).toBe(400);
+  });
+  it("rejects a missing or non-integer week with 400, not 409", async () => {
+    const seal = await import("@/app/api/seal/route");
+    expect((await post(seal, { content: "no week" })).status).toBe(400);
+    expect((await post(seal, { week: "seven", content: "x" })).status).toBe(400);
+  });
+});

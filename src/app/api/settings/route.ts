@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCtx } from "@/lib/context";
 import { DEFAULT_ANCHOR_PROMPT, getSetting, setSetting } from "@/lib/settings";
+import { readJson } from "../request";
 
 export async function GET() {
   const { db } = getCtx();
@@ -25,7 +26,8 @@ const KEYS: Record<string, string> = {
 
 export async function PUT(req: Request) {
   const { db } = getCtx();
-  const body = (await req.json()) as Record<string, unknown>;
+  const body = await readJson<Record<string, unknown>>(req);
+  if (!body) return NextResponse.json({ error: "BAD_REQUEST" }, { status: 400 });
   for (const [field, settingKey] of Object.entries(KEYS)) {
     if (typeof body[field] === "string" && (body[field] as string).length > 0) {
       setSetting(db, settingKey, body[field] as string);
