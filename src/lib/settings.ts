@@ -3,7 +3,7 @@ import { settings } from "@/lib/db/schema";
 import type { Db } from "@/lib/db";
 import { decrypt, encrypt } from "@/lib/crypto";
 
-export const DEFAULT_ANCHOR_PROMPT = "This week is spent. What did you trade it for?";
+export const DEFAULT_ANCHOR_PROMPT = "One of your weeks is gone for good. What did you do with it?";
 
 export function getSetting(db: Db, key: string): string | null {
   return db.select().from(settings).where(eq(settings.key, key)).get()?.value ?? null;

@@ -1,6 +1,8 @@
 # memento mori
 
-A private, self-hosted ritual for keeping a 52-week journal. Each week of the year is one cell in a grid; you write once, seal it, and the entry is encrypted at rest and locked from view until the year's unlock day. Weeks you miss simply stay empty — there's no backfilling, no editing after sealing, no pressure to catch up.
+> "It is not that we have a short time to live, but that we waste a lot of it." — Seneca
+
+A private, self-hosted ritual for keeping a 52-week journal, built on the Stoic life calendar: a year of your life as 52 boxes, each one filled exactly once and then gone for good. You write one paragraph a week, seal it, and the entry is encrypted at rest and locked from view until the year's unlock day. Weeks you miss simply stay empty — there's no backfilling, no editing after sealing, no pressure to catch up.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/writing-dark.png">
@@ -9,14 +11,14 @@ A private, self-hosted ritual for keeping a 52-week journal. Each week of the ye
 
 ## The ritual
 
-- **One paragraph a week.** A fixed anchor prompt — *"This week is spent. What did you trade it for?"* — and an optional drawn prompt from a customizable pool when you're circling.
+- **One paragraph a week.** A fixed anchor prompt — *"One of your weeks is gone for good. What did you do with it?"* — and an optional drawn prompt from a customizable pool when you're circling: achievements, lessons learned, time that could have been spent more wisely.
 - **Sealed means sealed.** Entries are encrypted with AES-256-GCM the moment you seal them. There is no way to read them back through the app until the year unlocks — not even for you.
 - **Missed weeks are part of the record.** They stay in the grid as gaps, deliberately.
 - **On unlock day** (December 31st by default) the year opens: every entry becomes readable, and an AI reads the whole year back to you as a single reflection — recurring themes, contradictions, what changed, and what the gaps might mean.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/readback-dark.png">
-  <img src="docs/screenshots/readback-light.png" alt="An unlocked year: the sealed entries revealed, followed by the AI-written reflection on the year." width="830">
+  <img src="docs/screenshots/readback-light.png" alt="The end of an unlocked year: the December entries, followed by the AI-written reflection on the whole year." width="830">
 </picture>
 
 The reflection works with the Anthropic API or a local [Ollama](https://ollama.com) model, so the year never has to leave your machine. Unlocked years move to a quiet archive:

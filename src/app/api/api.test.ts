@@ -26,7 +26,7 @@ describe("seal + year", () => {
     const state = await (await yearRoute.GET(new Request("http://x/api/year"))).json();
     expect(state.cells[week - 1].state).toBe("sealed");
     expect(state.entries).toBeNull(); // locked: no content anywhere
-    expect(state.anchorPrompt).toBe("This week is spent. What did you trade it for?");
+    expect(state.anchorPrompt).toBe("One of your weeks is gone for good. What did you do with it?");
     expect(JSON.stringify(state)).not.toContain("Sealed via API.");
   });
   it("maps seal errors to status codes", async () => {
