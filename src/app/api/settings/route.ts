@@ -1,0 +1,35 @@
+import { NextResponse } from "next/server";
+import { getCtx } from "@/lib/context";
+import { DEFAULT_ANCHOR_PROMPT, getSetting, setSetting } from "@/lib/settings";
+
+export async function GET() {
+  const { db } = getCtx();
+  return NextResponse.json({
+    anchorPrompt: getSetting(db, "anchor_prompt") ?? DEFAULT_ANCHOR_PROMPT,
+    unlockDay: getSetting(db, "unlock_day") ?? "12-31",
+    providerType: getSetting(db, "provider_type") ?? "anthropic",
+    providerModel: getSetting(db, "provider_model") ?? "claude-sonnet-5",
+    ollamaHost: getSetting(db, "ollama_host") ?? "http://localhost:11434",
+    anthropicKeySet: Boolean(process.env.ANTHROPIC_API_KEY ?? getSetting(db, "anthropic_api_key")),
+  });
+}
+
+const KEYS: Record<string, string> = {
+  anchorPrompt: "anchor_prompt",
+  unlockDay: "unlock_day",
+  providerType: "provider_type",
+  providerModel: "provider_model",
+  ollamaHost: "ollama_host",
+  anthropicApiKey: "anthropic_api_key",
+};
+
+export async function PUT(req: Request) {
+  const { db } = getCtx();
+  const body = (await req.json()) as Record<string, unknown>;
+  for (const [field, settingKey] of Object.entries(KEYS)) {
+    if (typeof body[field] === "string" && (body[field] as string).length > 0) {
+      setSetting(db, settingKey, body[field] as string);
+    }
+  }
+  return new NextResponse(null, { status: 204 });
+}
