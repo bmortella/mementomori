@@ -17,6 +17,7 @@ export class AnthropicProvider implements ReflectionProvider {
         max_tokens: 2048,
         messages: [{ role: "user", content: buildReflectionPrompt(year, entries) }],
       }),
+      signal: AbortSignal.timeout(120_000), // bound the request; a stalled API must fail, not hang
     });
     if (!res.ok) throw new Error(`Anthropic API error ${res.status}: ${(await res.text()).slice(0, 300)}`);
     const data = (await res.json()) as { content: Array<{ type: string; text?: string }> };

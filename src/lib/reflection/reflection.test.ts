@@ -57,3 +57,28 @@ describe("runReflection", () => {
     expect(yearRow(c)).toMatchObject({ reflectionStatus: "done", reflectionText: null });
   });
 });
+
+describe("runReflection guards", () => {
+  it("does not double-run concurrently in-process", async () => {
+    const c = unlockedCtx();
+    let calls = 0;
+    let release!: () => void;
+    const gate = new Promise<void>((r) => { release = r; });
+    const slow: ReflectionProvider = {
+      generate: async () => { calls++; await gate; return "slow"; },
+    };
+    const first = runReflection(c, 2026, slow);
+    const second = runReflection(c, 2026, slow);
+    release();
+    await Promise.all([first, second]);
+    expect(calls).toBe(1);
+    expect(yearRow(c).reflectionStatus).toBe("done");
+  });
+
+  it("recovers a row stranded in 'running' by a crashed process", async () => {
+    const c = unlockedCtx();
+    c.db.update(years).set({ reflectionStatus: "running" }).where(eq(years.year, 2026)).run();
+    await runReflection(c, 2026, { generate: async () => "recovered after crash" });
+    expect(yearRow(c)).toMatchObject({ reflectionStatus: "done", reflectionText: "recovered after crash" });
+  });
+});

@@ -7,12 +7,16 @@ import { loadPrompts } from "@/lib/prompts";
 import { formatWeekDates } from "@/lib/weeks";
 import { getProvider, type ReflectionEntry, type ReflectionProvider } from "./provider";
 
+// DB status is for display; this in-process set is the concurrency guard, so a
+// crash that strands a row in "running" can't block reruns after restart.
+const inFlight = new Set<number>();
+
 export async function runReflection(ctx: Ctx, year: number, provider?: ReflectionProvider): Promise<void> {
   const row = ctx.db.select().from(years).where(eq(years.year, year)).get();
-  if (!row || row.status !== "unlocked" || row.reflectionStatus === "running") return;
-
-  ctx.db.update(years).set({ reflectionStatus: "running", reflectionError: null }).where(eq(years.year, year)).run();
+  if (!row || row.status !== "unlocked" || inFlight.has(year)) return;
+  inFlight.add(year);
   try {
+    ctx.db.update(years).set({ reflectionStatus: "running", reflectionError: null }).where(eq(years.year, year)).run();
     const raw = readEntries(ctx, year);
     if (raw.length === 0) {
       ctx.db.update(years).set({ reflectionStatus: "done", reflectionText: null }).where(eq(years.year, year)).run();
@@ -33,5 +37,7 @@ export async function runReflection(ctx: Ctx, year: number, provider?: Reflectio
       .set({ reflectionStatus: "failed", reflectionError: e instanceof Error ? e.message : String(e) })
       .where(eq(years.year, year))
       .run();
+  } finally {
+    inFlight.delete(year);
   }
 }
