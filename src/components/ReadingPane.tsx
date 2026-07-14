@@ -83,7 +83,7 @@ export default function ReadingPane({
           <p className="mt-3 text-sm text-[var(--gray-3)]">No entries were sealed this year.</p>
         )}
         {(r.status === "running" || r.status === "none") && (
-          <p className="mt-3 text-sm text-[var(--gray-3)]">Being written…</p>
+          <p className="mm-shimmer mt-3 text-sm">Being written…</p>
         )}
         {r.status === "failed" && (
           <div className="mt-3 text-sm">

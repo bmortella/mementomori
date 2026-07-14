@@ -1,6 +1,30 @@
-# mementomori
+# memento mori
 
-A private, self-hosted ritual for keeping a 52-week journal. Each week of the year is one cell in a grid; you write once, seal it, and the entry is encrypted at rest and locked from view until December 31st. Weeks you miss simply stay empty — there's no backfilling, no editing after sealing, no pressure to catch up. On unlock day the year opens up for reading, and you can generate a single AI reflection over everything you sealed, looking back at the shape of the year as a whole.
+A private, self-hosted ritual for keeping a 52-week journal. Each week of the year is one cell in a grid; you write once, seal it, and the entry is encrypted at rest and locked from view until the year's unlock day. Weeks you miss simply stay empty — there's no backfilling, no editing after sealing, no pressure to catch up.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/writing-dark.png">
+  <img src="docs/screenshots/writing-light.png" alt="The writing view: a 52-week grid with sealed, missed, and future weeks, above the weekly prompt and writing surface." width="830">
+</picture>
+
+## The ritual
+
+- **One paragraph a week.** A fixed anchor prompt — *"This week is spent. What did you trade it for?"* — and an optional drawn prompt from a customizable pool when you're circling.
+- **Sealed means sealed.** Entries are encrypted with AES-256-GCM the moment you seal them. There is no way to read them back through the app until the year unlocks — not even for you.
+- **Missed weeks are part of the record.** They stay in the grid as gaps, deliberately.
+- **On unlock day** (December 31st by default) the year opens: every entry becomes readable, and an AI reads the whole year back to you as a single reflection — recurring themes, contradictions, what changed, and what the gaps might mean.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/readback-dark.png">
+  <img src="docs/screenshots/readback-light.png" alt="An unlocked year: the sealed entries revealed, followed by the AI-written reflection on the year." width="830">
+</picture>
+
+The reflection works with the Anthropic API or a local [Ollama](https://ollama.com) model, so the year never has to leave your machine. Unlocked years move to a quiet archive:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/archive-dark.png">
+  <img src="docs/screenshots/archive-light.png" alt="The past-years archive, listing each unlocked year with how many of its 52 weeks were sealed." width="830">
+</picture>
 
 ## Quick start
 
@@ -46,7 +70,12 @@ Ciphertext without the key that encrypted it is unrecoverable by design — ther
 Most day-to-day settings live in the app itself, at `/settings`:
 
 - **Anchor prompt** — the fixed prompt shown every week (as opposed to the rotating pool).
-- **Unlock day** — the `MM-DD` on which the current year's entries become readable (defaults to December 31st; applies to newly started years).
-- **Reflection provider** — the AI provider and model used to generate the end-of-year reflection, plus the API key (unless overridden by `ANTHROPIC_API_KEY`).
+- **Unlock day** — the `MM-DD` on which entries become readable (defaults to December 31st; changing it also applies to years still sealed).
+- **Reflection provider** — Anthropic or Ollama, the model, and the API key (unless overridden by `ANTHROPIC_API_KEY`). Keys are encrypted at rest.
+- **Seal confirmation** — off by default; enable it if you want a "sure?" step before a week is sealed forever.
 
 For deeper customization, edit `prompts.json` directly in the data volume to change the pool of prompts weeks are drawn from.
+
+## Tech
+
+Next.js (App Router), SQLite via better-sqlite3 + Drizzle, Tailwind CSS, Vitest. One container, one volume, no external services required.
