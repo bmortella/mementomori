@@ -41,4 +41,8 @@ describe("formatWeekDates", () => {
   it("formats inclusive range", () => {
     expect(formatWeekDates(2026, 2)).toBe("Jan 8 – Jan 14");
   });
+  it("stays on the correct calendar day across DST transitions", () => {
+    // Week 10 of 2029 ends Mar 11 (inclusive) — a US spring-forward window
+    expect(formatWeekDates(2029, 10)).toBe("Mar 5 – Mar 11");
+  });
 });

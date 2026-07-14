@@ -25,6 +25,6 @@ const FMT = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" })
 
 export function formatWeekDates(year: number, week: number): string {
   const { start, end } = weekRange(year, week);
-  const lastDay = new Date(end.getTime() - 86_400_000);
+  const lastDay = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
   return `${FMT.format(start)} – ${FMT.format(lastDay)}`;
 }
